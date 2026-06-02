@@ -1,55 +1,57 @@
-name: Deploy to GitHub Pages
+name: Deploy Vue Vite app to GitHub Pages
 
 on:
-  # 觸發條件：當推送到 main 分支時 (如果你的預設分支是 master，請將這裡改為 master)
   push:
-    branches: ["main"]
+    branches:
+      - main
 
-# 設定 GitHub Token 權限以允許部署到 Pages
+  workflow_dispatch:
+
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# 允許只有一個併發部署，跳過執行中的任務並取消排隊中的任務
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v3
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
         with:
-          version: 9
+          version: 10
 
-      - name: Setup Node
+      - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: "pnpm"
+          node-version: 22
+          cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - name: Build
         run: pnpm run build
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./dist" # Vite 預設打包輸出的資料夾
+          path: ./dist
 
       - name: Deploy to GitHub Pages
         id: deployment
